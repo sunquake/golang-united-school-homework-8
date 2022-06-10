@@ -68,6 +68,10 @@ func Perform(args Arguments, writer io.Writer) error {
 				temp = append(temp, v)
 			}
 		}
+		if len(items) == len(temp) {
+			fmt.Fprintf(writer, "Item with id %s not found", item.Id)
+			return nil
+		}
 		js, _ := json.Marshal(temp)
 		file.Truncate(0)
 		file.Write(js)

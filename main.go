@@ -48,11 +48,14 @@ func Perform(args Arguments, writer io.Writer) error {
 		js, _ := json.Marshal(items)
 		file.Truncate(0)
 		file.Write(js)
-		file.Sync()
+		//file.Sync()
 	case "list":
 		_, err := writer.Write(b)
 		return err
 	case "findById":
+		if item.Id == "" {
+			return errors.New("-id flag has to be specified")
+		}
 		for _, v := range items {
 			if v.Id == item.Id {
 				js, _ := json.Marshal(v)
@@ -62,6 +65,9 @@ func Perform(args Arguments, writer io.Writer) error {
 		}
 		writer.Write([]byte{})
 	case "remove":
+		if item.Id == "" {
+			return errors.New("-id flag has to be specified")
+		}
 		temp := []Item{}
 		for _, v := range items {
 			if v.Id != item.Id {
@@ -75,7 +81,7 @@ func Perform(args Arguments, writer io.Writer) error {
 		js, _ := json.Marshal(temp)
 		file.Truncate(0)
 		file.Write(js)
-		file.Sync()
+		//file.Sync()
 	default:
 		return fmt.Errorf("Operation %s not allowed!", oper)
 	}

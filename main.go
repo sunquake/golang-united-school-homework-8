@@ -46,9 +46,9 @@ func Perform(args Arguments, writer io.Writer) error {
 		}
 		items = append(items, item)
 		js, _ := json.Marshal(items)
-
 		file.Truncate(0)
-		fmt.Fprint(file, js)
+		file.Write(js)
+		file.Sync()
 	case "list":
 		_, err := writer.Write(b)
 		return err
@@ -70,7 +70,8 @@ func Perform(args Arguments, writer io.Writer) error {
 		}
 		js, _ := json.Marshal(temp)
 		file.Truncate(0)
-		fmt.Fprint(file, js)
+		file.Write(js)
+		file.Sync()
 	default:
 		return fmt.Errorf("Operation %s not allowed!", oper)
 	}

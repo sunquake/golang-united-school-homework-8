@@ -39,6 +39,9 @@ func Perform(args Arguments, writer io.Writer) error {
 		if args["item"] == "" {
 			return errors.New("-item flag has to be specified")
 		}
+		if item.Id == "" {
+			return errors.New("-id flag has to be specified")
+		}
 		for _, v := range items {
 			if v.Id == item.Id {
 				return fmt.Errorf("Item with id %s already exists", v.Id)
@@ -64,6 +67,7 @@ func Perform(args Arguments, writer io.Writer) error {
 			}
 		}
 		writer.Write([]byte{})
+		return fmt.Errorf("Item with id %s not found", item.Id)
 	case "remove":
 		if item.Id == "" {
 			return errors.New("-id flag has to be specified")
@@ -76,7 +80,7 @@ func Perform(args Arguments, writer io.Writer) error {
 		}
 		if len(items) == len(temp) {
 			fmt.Fprintf(writer, "Item with id %s not found", item.Id)
-			return nil
+			return fmt.Errorf("Item with id %s not found", item.Id)
 		}
 		js, _ := json.Marshal(temp)
 		file.Truncate(0)

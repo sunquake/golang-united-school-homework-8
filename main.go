@@ -32,7 +32,7 @@ func Perform(args Arguments, writer io.Writer) error {
 	file, _ := os.OpenFile(args["fileName"], os.O_RDWR|os.O_CREATE, 0666)
 	defer file.Close()
 	b, _ := ioutil.ReadAll(file)
-	items := []Item{}
+	var items []Item
 	json.Unmarshal(b, &items)
 	switch oper {
 	case "add":
@@ -47,8 +47,7 @@ func Perform(args Arguments, writer io.Writer) error {
 		items = append(items, item)
 		js, _ := json.Marshal(items)
 
-		er := file.Truncate(0)
-		fmt.Println(er)
+		file.Truncate(0)
 		fmt.Fprint(file, js)
 	case "list":
 		_, err := writer.Write(b)
@@ -61,6 +60,7 @@ func Perform(args Arguments, writer io.Writer) error {
 				return err
 			}
 		}
+		writer.Write([]byte{})
 	case "remove":
 		temp := []Item{}
 		for _, v := range items {
@@ -69,8 +69,7 @@ func Perform(args Arguments, writer io.Writer) error {
 			}
 		}
 		js, _ := json.Marshal(temp)
-		er := file.Truncate(0)
-		fmt.Println(er)
+		file.Truncate(0)
 		fmt.Fprint(file, js)
 	default:
 		return fmt.Errorf("Operation %s not allowed!", oper)

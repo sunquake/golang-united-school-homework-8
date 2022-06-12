@@ -22,70 +22,68 @@ var item Item
 var items []Item
 
 func Perform(args Arguments, writer io.Writer) error {
-	oper := args["operation"]
-	if oper == "" {
+	oper, ok := args["operation"]
+	if !ok {
 		return errors.New("-operation flag has to be specified")
 	}
-	if args["fileName"] == "" {
+	fName, ok := args["fileName"]
+	if !ok {
 		return errors.New("-fileName flag has to be specified")
 	}
-
-	file, _ := os.OpenFile(args["fileName"], os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	file, _ := os.OpenFile(fName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	defer file.Close()
 	b, _ := ioutil.ReadAll(file)
 	fmt.Println("+++++++++++", string(b))
-
 	json.Unmarshal(b, &items)
 	fmt.Println("--------unmarshal:", len(items))
+
 	switch oper {
 	case "add":
 		if args["item"] == "" {
 			return errors.New("-item flag has to be specified")
 		}
-		if args["id"] == "" {
+		if item.Id == "" {
 			return errors.New("id is missing")
 		}
 		for _, v := range items {
-			if v.Id == args["id"] {
+			if v.Id == item.Id {
 				return fmt.Errorf("Item with id %s already exists", v.Id)
 			}
 		}
 		items = append(items, item)
 		js, _ := json.Marshal(items)
-		// file.Truncate(0)
 		file.Write(js)
 	case "list":
 		_, err := writer.Write(b)
 		return err
 	case "findById":
-		if args["id"] == "" {
-			return errors.New("-id flag has to be specified")
+		if item.Id == "" {
+			return errors.New("id is missing")
 		}
 		for _, v := range items {
-			if v.Id == args["id"] {
+			if v.Id == item.Id {
 				js, _ := json.Marshal(v)
-				_, err := writer.Write(js)
-				return err
+				writer.Write(js)
+				return nil
 			}
 		}
 		writer.Write([]byte(""))
-		return fmt.Errorf("Item with id %s not found", args["id"])
+		return fmt.Errorf("Item with id %s not found", item.Id)
 	case "remove":
-		if args["id"] == "" {
-			return errors.New("-id flag has to be specified")
+		if item.Id == "" {
+			return errors.New("id is missing")
 		}
 		temp := []Item{}
 		for _, v := range items {
-			if v.Id != args["id"] {
+			if v.Id != item.Id {
 				temp = append(temp, v)
 			}
 		}
 		if len(items) == len(temp) {
-			fmt.Fprintf(writer, "Item with id %s not found", args["id"])
-			return fmt.Errorf("Item with id %s not found", args["id"])
+			fmt.Fprintf(writer, "Item with id %s not found", item.Id)
+			return fmt.Errorf("Item with id %s not found", item.Id)
 		}
 		js, _ := json.Marshal(temp)
-		// file.Truncate(0)
 		file.Write(js)
 	default:
 		return fmt.Errorf("Operation %s not allowed!", oper)

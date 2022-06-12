@@ -22,12 +22,12 @@ var item Item
 var items []Item
 
 func Perform(args Arguments, writer io.Writer) error {
-	oper, ok := args["operation"]
-	if !ok {
+	oper := args["operation"]
+	if oper == "" {
 		return errors.New("-operation flag has to be specified")
 	}
-	fName, ok := args["fileName"]
-	if !ok {
+	fName := args["fileName"]
+	if fName == "" {
 		return errors.New("-fileName flag has to be specified")
 	}
 	file, _ := os.OpenFile(fName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)

@@ -42,9 +42,9 @@ func Perform(args Arguments, writer io.Writer) error {
 		if args["item"] == "" {
 			return errors.New("-item flag has to be specified")
 		}
-		// if args["id"] == "" {
-		// 	return errors.New("id is missing")
-		// }
+		if args["id"] == "" {
+			return errors.New("id is missing")
+		}
 		for _, v := range items {
 			if v.Id == args["id"] {
 				return fmt.Errorf("Item with id %s already exists", v.Id)
@@ -71,9 +71,9 @@ func Perform(args Arguments, writer io.Writer) error {
 		writer.Write([]byte(""))
 		return fmt.Errorf("Item with id %s not found", args["id"])
 	case "remove":
-		// if args["id"] == "" {
-		// 	return errors.New("-id flag has to be specified")
-		// }
+		if args["id"] == "" {
+			return errors.New("-id flag has to be specified")
+		}
 		temp := []Item{}
 		for _, v := range items {
 			if v.Id != args["id"] {

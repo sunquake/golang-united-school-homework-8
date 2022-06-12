@@ -19,6 +19,7 @@ type Item struct {
 }
 
 var item Item
+var items []Item
 
 func Perform(args Arguments, writer io.Writer) error {
 	oper := args["operation"]
@@ -29,21 +30,21 @@ func Perform(args Arguments, writer io.Writer) error {
 		return errors.New("-fileName flag has to be specified")
 	}
 
-	file, _ := os.OpenFile(args["fileName"], os.O_RDWR|os.O_CREATE, 0666)
+	file, _ := os.OpenFile(args["fileName"], os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	defer file.Close()
 	b, _ := ioutil.ReadAll(file)
-	var items []Item
-	if len(b) != 0 {
-		json.Unmarshal(b, &items)
-	}
+	fmt.Println("+++++++++++", string(b))
+
+	json.Unmarshal(b, &items)
+	fmt.Println("--------unmarshal:", len(items))
 	switch oper {
 	case "add":
 		if args["item"] == "" {
 			return errors.New("-item flag has to be specified")
 		}
-		if args["id"] == "" {
-			return errors.New("id is missing")
-		}
+		// if args["id"] == "" {
+		// 	return errors.New("id is missing")
+		// }
 		for _, v := range items {
 			if v.Id == args["id"] {
 				return fmt.Errorf("Item with id %s already exists", v.Id)
@@ -51,9 +52,8 @@ func Perform(args Arguments, writer io.Writer) error {
 		}
 		items = append(items, item)
 		js, _ := json.Marshal(items)
-		file.Truncate(0)
+		// file.Truncate(0)
 		file.Write(js)
-		//file.Sync()
 	case "list":
 		_, err := writer.Write(b)
 		return err
@@ -68,12 +68,12 @@ func Perform(args Arguments, writer io.Writer) error {
 				return err
 			}
 		}
-		writer.Write([]byte{})
-		return fmt.Errorf("Item with id %s not found", item.Id)
+		writer.Write([]byte(""))
+		return fmt.Errorf("Item with id %s not found", args["id"])
 	case "remove":
-		if args["id"] == "" {
-			return errors.New("-id flag has to be specified")
-		}
+		// if args["id"] == "" {
+		// 	return errors.New("-id flag has to be specified")
+		// }
 		temp := []Item{}
 		for _, v := range items {
 			if v.Id != args["id"] {
@@ -85,9 +85,8 @@ func Perform(args Arguments, writer io.Writer) error {
 			return fmt.Errorf("Item with id %s not found", args["id"])
 		}
 		js, _ := json.Marshal(temp)
-		file.Truncate(0)
+		// file.Truncate(0)
 		file.Write(js)
-		//file.Sync()
 	default:
 		return fmt.Errorf("Operation %s not allowed!", oper)
 	}

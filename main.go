@@ -59,6 +59,9 @@ func Perform(args Arguments, writer io.Writer) error {
 		}
 		item := Item{}
 		json.Unmarshal([]byte(args["item"]), &item)
+		if item.Id == "" {
+			break
+		}
 		for _, v := range items {
 			if v.Id == item.Id {
 				fmt.Fprintf(writer, "Item with id %s already exists", v.Id)

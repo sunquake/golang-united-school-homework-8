@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 )
 
@@ -18,9 +17,6 @@ type Item struct {
 	Age   int    `json:"age"`
 }
 
-var item Item
-var items []Item
-
 func Perform(args Arguments, writer io.Writer) error {
 	oper := args["operation"]
 	if oper == "" {
@@ -30,19 +26,39 @@ func Perform(args Arguments, writer io.Writer) error {
 	if fName == "" {
 		return errors.New("-fileName flag has to be specified")
 	}
-	file, _ := os.OpenFile(fName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
-	defer file.Close()
-	b, _ := ioutil.ReadAll(file)
-	fmt.Println("+++++++++++", string(b))
-	json.Unmarshal(b, &items)
-	fmt.Println("--------unmarshal:", len(items))
+	b, _ := os.ReadFile(fName)
+	if oper == "list" {
+		writer.Write(b)
+		return nil
+	}
 
+	items := []Item{}
+	json.Unmarshal(b, &items)
+	id := args["id"]
+
+	if oper == "findById" {
+		if id == "" {
+			return errors.New("-id flag has to be specified")
+		}
+		for _, v := range items {
+			if v.Id == id {
+				js, _ := json.Marshal(v)
+				writer.Write(js)
+				return nil
+			}
+		}
+		writer.Write([]byte{})
+		return fmt.Errorf("Item with id %s not found", id)
+	}
+	file, _ := os.OpenFile(fName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	defer file.Close()
 	switch oper {
 	case "add":
 		if args["item"] == "" {
 			return errors.New("-item flag has to be specified")
 		}
-
+		item := Item{}
+		json.Unmarshal([]byte(args["item"]), &item)
 		for _, v := range items {
 			if v.Id == item.Id {
 				return fmt.Errorf("Item with id %s already exists", v.Id)
@@ -51,32 +67,20 @@ func Perform(args Arguments, writer io.Writer) error {
 		items = append(items, item)
 		js, _ := json.Marshal(items)
 		file.Write(js)
-	case "list":
-		if len(b) > 0 {
-			writer.Write(b)
-		}
-	case "findById":
 
-		for _, v := range items {
-			if v.Id == item.Id {
-				js, _ := json.Marshal(v)
-				writer.Write(js)
-				return nil
-			}
-		}
-		writer.Write([]byte(""))
-		return fmt.Errorf("Item with id %s not found", item.Id)
 	case "remove":
-
+		if id == "" {
+			return errors.New("-id flag has to be specified")
+		}
 		temp := []Item{}
 		for _, v := range items {
-			if v.Id != item.Id {
+			if v.Id != id {
 				temp = append(temp, v)
 			}
 		}
 		if len(items) == len(temp) {
-			fmt.Fprintf(writer, "Item with id %s not found", item.Id)
-			return fmt.Errorf("Item with id %s not found", item.Id)
+			fmt.Fprintf(writer, "Item with id %s not found", id)
+			return fmt.Errorf("Item with id %s not found", id)
 		}
 		js, _ := json.Marshal(temp)
 		file.Write(js)
@@ -90,9 +94,9 @@ func parseArgs() Arguments {
 	op := flag.String("operation", "", "")
 	itm := flag.String("item", "", "a json")
 	fN := flag.String("fileName", "", "")
+	id := flag.String("id", "", "")
 	flag.Parse()
-	json.Unmarshal([]byte(*itm), &item)
-	return Arguments{"operation": *op, "id": item.Id, "item": *itm, "fileName": *fN}
+	return Arguments{"operation": *op, "id": *id, "item": *itm, "fileName": *fN}
 }
 
 func main() {

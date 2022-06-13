@@ -48,7 +48,7 @@ func Perform(args Arguments, writer io.Writer) error {
 			}
 		}
 		writer.Write([]byte{})
-		return fmt.Errorf("Item with id %s not found", id)
+		return nil
 	}
 	file, _ := os.OpenFile(fName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	defer file.Close()
@@ -61,7 +61,8 @@ func Perform(args Arguments, writer io.Writer) error {
 		json.Unmarshal([]byte(args["item"]), &item)
 		for _, v := range items {
 			if v.Id == item.Id {
-				return fmt.Errorf("Item with id %s already exists", v.Id)
+				fmt.Fprintf(writer, "Item with id %s already exists", v.Id)
+				return nil
 			}
 		}
 		items = append(items, item)
@@ -80,7 +81,7 @@ func Perform(args Arguments, writer io.Writer) error {
 		}
 		if len(items) == len(temp) {
 			fmt.Fprintf(writer, "Item with id %s not found", id)
-			return fmt.Errorf("Item with id %s not found", id)
+			return nil
 		}
 		js, _ := json.Marshal(temp)
 		file.Write(js)
